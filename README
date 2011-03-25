@@ -1,0 +1,26 @@
+== About backlog
+
+Backlog is a backlog management system. It provides web-based and
+text-based operation.
+
+The basis is 'git' and the architecture follows gits style of
+'plumbing' and 'porcellain'. Here git is the plumbing and the Rails
+application is the porcellain.
+
+== Types of entries
+
+* Theme / Strategy
+* Epic
+* Feature
+* Story (doable within a sprint)
+
+== Kanban stages
+
+* proposed
+* backlogged
+* scheduled
+* in progress
+* deployed
+* enabled
+* adopted
+* validated
