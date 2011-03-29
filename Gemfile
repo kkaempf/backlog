@@ -5,8 +5,6 @@ gem 'rails', '3.0.5'
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
-# gem 'sqlite3'
-
 # Use unicorn as the web server
 # gem 'unicorn'
 
@@ -31,7 +29,7 @@ gem 'rails', '3.0.5'
 # end
 
 group :development, :test do
-  gem 'rspec-rails'
+ # nothing
 end
 
 group :cucumber do
@@ -39,7 +37,6 @@ group :cucumber do
   gem 'database_cleaner'
   gem 'cucumber-rails'
   gem 'cucumber'
-  gem 'rspec-rails'
   gem 'spork'
   gem 'launchy'    # So you can do Then show me the page
 end
