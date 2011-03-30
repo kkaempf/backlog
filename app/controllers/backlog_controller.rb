@@ -1,11 +1,8 @@
 class BacklogController < ApplicationController
-  def login
+  def new
   end
 
-  def logout
-  end
-
-  def index
+  def create
   end
 
 end
