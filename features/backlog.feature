@@ -1,4 +1,4 @@
-Feature: Epic
+Feature: Backlog
     In order to capture a new customer request
     As a product manager
     I want to enter it into the backlog    In order to get an overview
@@ -14,5 +14,5 @@ Feature: Epic
 
     Scenario: Entering a feature
       Given I am on the home page
-      When I press "new"
+      When I follow "new"
       Then I should see "New backlog entry"
