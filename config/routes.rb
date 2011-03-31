@@ -5,7 +5,9 @@ Backlog::Application.routes.draw do
 
   get "dashboard/index"
 
-  resources :backlog
+  get "backlog/new"
+
+  resources :items
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

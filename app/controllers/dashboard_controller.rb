@@ -1,4 +1,5 @@
 class DashboardController < ApplicationController
+  
   def login
   end
 
@@ -6,6 +7,7 @@ class DashboardController < ApplicationController
   end
 
   def index
+    @rc = BacklogRc.instance
   end
 
 end

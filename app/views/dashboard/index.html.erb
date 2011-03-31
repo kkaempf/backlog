@@ -1,3 +1,5 @@
-<h1>Backlog</h1>
-<p>Find me in app/views/backlog/index.html.erb</p>
-<%= button_to "new", { :action => "new", :controller => "backlog", :id => "new" } %>
+<h1>Project Backlog - Dashboard</h1>
+<h2>Current backlog</h2>
+Loaded from <%= @rc.home %>
+<hr/>
+<%= link_to "new", { :action => "new", :controller => "backlog", :id => "new" } %>

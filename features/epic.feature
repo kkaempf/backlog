@@ -11,3 +11,8 @@ Feature: Epic
       Given I have a browser
       When I go to the home page
       Then I should see "Backlog"
+
+    Scenario: Entering a feature
+      Given I am on the home page
+      When I press "new"
+      Then I should see "New backlog entry"
