@@ -9,7 +9,20 @@ class Item
   def initialize
   end
 
+  def id
+    "item_id"
+  end
+
+  def to_s
+    "item_s"
+  end
+
   def to_key
     ["0"]
+  end
+  
+  def method_missing name, *args
+    Rails.logger.info "Items.#{name.to_s} not implemented"
+    nil
   end
 end

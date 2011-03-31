@@ -27,6 +27,8 @@ gem 'rails', '3.0.5'
 #   gem 'webrat'
 # end
 
+gem 'dynamic_form'
+
 group :development, :test do
  # nothing
 end
