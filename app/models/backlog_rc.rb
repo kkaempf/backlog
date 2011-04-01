@@ -9,10 +9,12 @@ class BacklogRc
   extend ActiveModel::Naming
 
   validates :home, :presence => true
+  attr_reader :name, :email, :path
 
   def initialize
+    @path = File.expand_path(BACKLOGRC_PATH)
     begin
-      File.open(File.expand_path(BACKLOGRC_PATH)) do |f|
+      File.open(@path) do |f|
 	rc = YAML.load(f)
 	self.home = rc["home"]
 	self.name = rc["name"]
