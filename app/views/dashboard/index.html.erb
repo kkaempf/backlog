@@ -1,5 +1,9 @@
+<div id="header">
+Name: <span id="name"><%= @git.config('user.name') %></span>
+EMail: <span id="email"><%= @git.config('user.email') %></span>
+Dir: <span id="home"><%= @rc.home %></span>
+</div>
 <h1>Project Backlog - Dashboard</h1>
 <h2>Current backlog</h2>
-Loaded from <%= @rc.home %>
 <hr/>
 <%= link_to "new", { :action => "new", :controller => "backlog", :id => "new" } %>
