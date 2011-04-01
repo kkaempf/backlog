@@ -16,3 +16,10 @@ Feature: Backlog
       Given I am on the home page
       When I follow "new"
       Then I should see "New backlog entry"
+
+      Given I am on the "New backlog entry" page
+      When I fill in "Title" with "dummy"
+      And I fill in "Description" with "foo foo"
+      And I fill in "Persona" with "Tester"
+      And I press "Create"
+#      Then I should see "Backlog"
