@@ -1,0 +1,12 @@
+#header {
+  width: 1024px;
+  height: 30px;
+  font-style: italic;
+  background: aqua;
+}
+
+#name {
+  color: gray;
+  font-style: bold;
+  padding: 5px;
+}
