@@ -18,7 +18,7 @@ Feature: Backlog
       Then I should see "New backlog entry"
 
       Given I am on the "New backlog entry" page
-      When I fill in "Title" with "dummy"
+      When I fill in "Subject" with "dummy"
       And I fill in "Description" with "foo foo"
       And I fill in "Persona" with "Tester"
       And I press "Create"
