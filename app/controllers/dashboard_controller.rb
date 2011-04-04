@@ -1,19 +1,10 @@
+require 'lib/git'
+
 class DashboardController < ApplicationController
   
   def initialize
+    @git = Backlog::Git.instance.git
     @rc = BacklogRc.instance
-    begin
-      @git = Git.open(@rc.home, :log => Rails.logger)
-    rescue ArgumentError => e
-      Rails.logger.warn e.inspect
-      @git = Git.init @rc.home
-    end
-    unless @git.config('user.name')
-      raise "'name' must be set in @rc.path"
-    end
-    unless @git.config('user.email')
-      raise "'email' must be set in @rc.path"
-    end
     super
   end
 
