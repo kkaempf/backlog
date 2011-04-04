@@ -23,7 +23,7 @@ class BacklogRc
     rescue
       Rails.logger.warn "~/.backlogrc not readable"
     end
-    self.home = File.expand_path(@home || "~")
+    self.home = File.expand_path(@home || "~/backlog")
   end
 
   def home= homedir
