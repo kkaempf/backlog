@@ -1,0 +1,18 @@
+From kkaempf@linux-lkbf.localdomain Tue Apr  5 14:05:33 2011
+Date: Tue, 5 Apr 2011 14:05:33 +0200
+From: Klaus =?utf-8?B?S8OkbXBm?= <kkaempf@linux-lkbf.localdomain>
+To: backlog@linux-lkbf.localdomain
+Subject: A backlog item per mail
+Message-ID: <20110405120533.GA10877@linux-lkbf.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Status: RO
+Content-Length: 121
+Lines: 4
+
+Given I have a mailer
+When I enter a backlog item as mail
+And I send it to backlog
+Then I should have a new backlog item
+

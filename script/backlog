@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# backlog - command line interface to backlog management
+
+APP_PATH = File.expand_path('../../config/application',  __FILE__)
+require File.expand_path('../../config/boot',  __FILE__)
+require File.expand_path('../../config/environment',  __FILE__)
+
+#require File.expand_path('../../app/models/backlog_rc',  __FILE__)
+#require File.expand_path('../../app/models/item',  __FILE__)
+
+puts "Backlog"
+
+if ARGV.empty?
+  item = Item.new $stdin
+  item.save
+  puts "Item saved as #{item.path}"
+end

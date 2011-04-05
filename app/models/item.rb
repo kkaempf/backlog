@@ -19,42 +19,45 @@ class Item
     Item.new subject
   end
 
-  def initialize subject = nil
+  #
+  # Create Item
+  # name:
+  #   if nil => create new (and empty) item
+  #   if File.readable? => read new item from file
+  #   else => use as name of existing item
+  # 
+  def initialize item = nil
     @git = Backlog::Git.instance.git
     @header = []
     @headerpos = {}
-    if subject
-      path = self.class.path_for subject
-      if File.exists? path
-	File.open(path) do |f|
-	  lnum = 0
-	  while line = f.gets
-	    @header << line
-	    case line
-	    when /^From (\S+)\s(.*)$/
-	      # 'From ' must be first line	      
-	      raise "Bad file format, wrong 'From '" unless lnum == 0
-	      @created_by = $1
-	      @created_on = Time.gm(ParseDate.parsedate($2, true))
-	    when /^(\w+):\s+(.*)$/
-	      $stderr.puts "<#{$1}>[#{$2}]"
-	      @headerpos[$1.capitalize] = [lnum, line.size - $2.size]
-	    when ""
-	      # empty line, rest must be mail body
-	      @description = f.read
-	    end
-	    lnum += 1
-	  end
-	  raise "Bad file format, wrong 'From ' format" unless @created_by && @created_on
-	end
+    case item
+    when String
+      if name[0,1] == "/"
+	# read item from file
+	self.read name
+      elsif name.length > 0
+	path = self.class.path_for name
+	self.read path
+	@changed = false
+      else
+	raise "Empty name passed to Item.new"
       end
-      @changed = false
+    when IO
+      read item
     else
       # New item
-      @changed = true
+      self.changed!
     end
   end
   
+  def changed!
+    @changed = true
+  end
+  
+  def path
+    @path
+  end
+
   def to_s
     self.subject
   end
@@ -62,9 +65,9 @@ class Item
   def save
     return unless @changed
     raise "Cannot save Item without Subject" if self.subject.to_s.empty?
-    path = self.class.path_for self.subject
+    @path = self.class.path_for self.subject
     commit = nil
-    File.open(path, "w") do |f|
+    File.open(@path, "w") do |f|
       if @created_by
 	commit = "Updated item"
 	@header.each do |l|
@@ -129,8 +132,45 @@ class Item
       end
     else
       $stderr.puts "Items.#{key} not defined"
+      raise if key == "Read"
       nil
     end
   end
 
+private
+  #
+  # Read item from IO or from path
+  #
+  def read from
+    unless from.is_a? IO
+      f = File.open(from)
+    else
+      f = from
+      changed!
+    end
+    begin
+      lnum = 0
+      while line = f.gets
+	@header << line.chomp!
+	case line
+	when /^From (\S+)\s(.*)$/
+	  # 'From ' must be first line	      
+	  raise "Bad file format, wrong 'From '" unless lnum == 0
+#	  $stderr.puts "by >#{$1}< on >#{$2}<"
+	  @created_by = $1
+	  @created_on = Time.gm(*ParseDate.parsedate($2))
+	when /^((\w+):\s+)(.*)$/
+	  $stderr.puts "<#{$2}>[#{$3}]"
+	  @headerpos[$2.capitalize] = [lnum, $1.size]
+	when ""
+	  # empty line, rest must be mail body
+	  @description = f.read
+	end
+	lnum += 1
+      end
+      raise "Bad file format, wrong 'From ' format" unless @created_by && @created_on
+    ensure
+      f.close unless f == from
+    end
+  end
 end

@@ -22,4 +22,9 @@ Feature: Backlog
       And I fill in "Description" with "foo foo"
       And I fill in "Persona" with "Tester"
       And I press "Create"
-#      Then I should see "Backlog"
+      Then I should see "Backlog"
+      
+   Scenario: Bouncing a feature from mail
+      Given I have a mail with a feature
+      When I bounce it to 'backlog'
+      Then it should appear in the backlog
