@@ -27,7 +27,7 @@ class BacklogRc
   end
 
   def home= homedir
-    raise "homedir must be a directory" unless File.directory? homedir
+    Dir.mkdir(homedir) unless File.directory? homedir
     @home = homedir
   end
   def home
