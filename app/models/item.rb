@@ -44,7 +44,7 @@ class Item
     @header = []
     @headerpos = {}
     if item.nil?
-      subject = item
+      self.subject = item
       @changed = true
     else
       read item
@@ -58,13 +58,14 @@ class Item
   def save
     return nil unless @changed
     commit = nil
+    #
+    # 
+    #
+    file_exists_in_git = @git.status[self.subject]
     file = Item.full_path_for(self.subject)
     File.open(file, "w") do |f|
-      if @created_by
+      if file_exists_in_git
 	commit = "Updated item"
-	@header.each do |l|
-	  f.puts l
-	end
       else
 	commit = "New item"
 	@created_by = ENV['USER']
@@ -73,12 +74,15 @@ class Item
 	f.puts "From #{@created_by} #{@created_on.asctime}"
 	f.puts "From: #{@created_by}"
 	f.puts "Date: #{@created_on}"
-	f.puts ""
       end
+      @header.each do |l|
+	f.puts l
+      end
+      f.puts ""
       f.write @description
     end
     @git.add file
-    @git.commit commit if @git.status[file]
+    @git.commit commit if @git.status[self.subject]
     @changed = false
     file
   end
@@ -117,6 +121,7 @@ class Item
 	pos = key.length+2
 	@headerpos[key] = [lnum, pos]
 	@changed = true
+#	$stderr.puts "New header[#{lnum}] #{key}"
       end
     end
     if lnum
@@ -148,7 +153,9 @@ private
       f = from
       @changed = true
     else
-      f = File.open(Item.full_path_for from)
+      path = Item.full_path_for from
+      return unless File.readable?(from) # new file
+      f = File.open()
     end
     begin
       lnum = 0
