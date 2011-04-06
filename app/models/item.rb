@@ -55,24 +55,15 @@ class Item
   end
 
   def save
-    commit_msg = nil
-    #
-    # 
-    #
-    file_exists_in_git = @git.status[self.subject]
     file = Item.full_path_for(self.subject)
     File.open(file, "w") do |f|
-      if file_exists_in_git
-	commit_msg = "Updated item"
-      else
-	commit_msg = "New item"
+      if @created_on.nil?
 	@created_by = ENV['USER']
 	@created_on = Time.now
-	# Create new file
-	f.puts "From #{@created_by} #{@created_on.asctime}"
-	f.puts "From: #{@created_by}"
-	f.puts "Date: #{@created_on}"
+	@header.push "From: #{@created_by}"
+	@header.push "Date: #{@created_on}"
       end
+      f.puts "From #{@created_by} #{@created_on.asctime}"
       @header.each do |l|
 	f.puts l
       end
@@ -81,12 +72,16 @@ class Item
     end
     @git.add file
     status = @git.status[self.subject]
-    if status && (status.type == 'A' || status.type == 'M')
-      @git.commit commit_msg
-      file
-    else
-      nil
+    return nil unless status
+    commit_msg = nil
+    case status.type
+    when 'A': commit_msg = "New item"
+    when 'M': commit_msg = "Modified item"
+    when 'D': commit_msg = "Dropped item"
     end
+    return nil if commit_msg.nil?
+    @git.commit commit_msg 
+    file
   end
 
   def persisted?
@@ -115,6 +110,7 @@ class Item
     # known header ?
     key = key.capitalize
     lnum, pos = @headerpos[key]
+#    $stderr.puts "method_missing >#{name}<[#{key}] @ l#{lnum} p#{pos}"
     unless lnum
       if setter
 	# new header entry, compute @headerpos
@@ -131,13 +127,13 @@ class Item
 	end
 #	$stderr.puts "Items.#{key} = #{value}"
 	@header[lnum] = "#{key}: #{value}"
-	value
+	return value
       else
-#	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
-	@header[lnum][pos..-1]
+	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
+	return @header[lnum][pos..-1]
       end
     else
-#      $stderr.puts "Items.#{key} not defined"
+      $stderr.puts "Items.#{key} not defined"
       raise if key == "Read"
       nil
     end
@@ -152,30 +148,31 @@ private
       f = from
     else
       path = Item.full_path_for from
-      return unless File.readable?(from) # new file
-      f = File.open()
+      return unless File.readable?(path) # new file
+      f = File.open(path)
+#      $stderr.puts "Item.read #{from} #{path}"
     end
     begin
       lnum = 0
       while line = f.gets
-	@header << line.chomp!
 	case line
 	when /^From (\S+)\s(.*)$/
 	  # 'From ' must be first line	      
-	  raise "Bad file format, 'From ' not first line in #{from}" unless lnum == 0
+	  raise "Bad file format, 'From ' at line #{lnum} in #{from}" unless lnum == 0
 #	  $stderr.puts "by >#{$1}< on >#{$2}<"
 	  @created_by = $1
 	  @created_on = Time.gm(*ParseDate.parsedate($2))
 	when /^((\w+):\s+)(.*)$/
+	  @header << line.chomp!
 #	  $stderr.puts "<#{$2}>[#{$3}]"
-	  @headerpos[$2.capitalize] = [lnum, $1.size]
+	  @headerpos[$2.capitalize] = [@header.size-1, $1.size]
 	when ""
 	  # empty line, rest must be mail body
 	  @description = f.read
 	end
 	lnum += 1
       end
-      raise "Bad file format, wrong 'From ' format in #{from}" unless @created_by && @created_on
+      raise "Bad file format, wrong 'From ' format in #{from}" if @created_by.nil? || @created_on.nil?
     ensure
       f.close unless f == from
     end
