@@ -99,7 +99,6 @@ class Item
   def method_missing name, *args
     setter = false
     name = name.to_s
-    name = name[1..-1] if name[0,1] == "@"
     # getter or setter called ?
     if name[-1,1] == "="
       key = name[0...-1]
@@ -115,14 +114,19 @@ class Item
       if setter
 	# new header entry, compute @headerpos
 	lnum = @header.size
-	@headerpos[key] = [lnum, key.length+2]
+	pos = key.length+2
+	@headerpos[key] = [lnum, pos]
 	@changed = true
       end
     end
     if lnum
-      if setter && (@header[lnum][pos..-1] != value)
+      if setter
+	if @header[lnum] && (@header[lnum][pos..-1] == value)
+	  return
+	end
 #	$stderr.puts "Items.#{key} = #{value}"
 	@header[lnum] = "#{key}: #{value}"
+	@changed = true
 	value
       else
 #	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
