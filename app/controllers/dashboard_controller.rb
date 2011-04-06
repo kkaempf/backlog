@@ -15,6 +15,7 @@ class DashboardController < ApplicationController
   end
 
   def index
+    @items = Item.find :all
   end
 
 end

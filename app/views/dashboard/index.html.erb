@@ -5,5 +5,10 @@ Dir: <span id="home"><%= @rc.home %></span>
 </div>
 <h1>Project Backlog - Dashboard</h1>
 <h2>Current backlog</h2>
+<ul>
+<% @items.each do |item| %>
+<li><%= item.subject %></li>
+<% end %>
+</ul>
 <hr/>
 <%= link_to "new", { :action => "new", :controller => "backlog" } %>
