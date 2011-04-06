@@ -25,6 +25,6 @@ Feature: Backlog
       Then I should see "Backlog"
       
    Scenario: Bouncing a feature from mail
-      Given I have a mail with a feature
-      When I bounce it to 'backlog'
-      Then it should appear in the backlog
+      Given I have a mail called "sample-mail"
+      When I bounce "sample-mail" to 'backlog'
+      Then "sample-mail" should appear in the backlog
