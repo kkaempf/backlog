@@ -10,13 +10,24 @@ class Item
 
   attr_reader :created_by, :created_on, :description
   
-  def Item.path_for subject
-    File.join(File.expand_path(Backlog::Git.instance.git.dir.path), subject)
+  def Item.full_path_for subject
+    File.join(Backlog::Git.instance.git.dir.path, subject)
   end
 
-  def Item.find subject
-    return nil unless File.exists?(Item.path_for subject)
-    Item.new subject
+  def Item.find what
+    case what
+    when String
+      return nil unless File.exists?(Item.full_path_for subject)
+      Item.new subject
+    when :all
+      files = []
+      @git.status.each do |file|
+	files << file
+      end
+      files
+    else
+      nil
+    end
   end
 
   #
@@ -30,32 +41,15 @@ class Item
     @git = Backlog::Git.instance.git
     @header = []
     @headerpos = {}
-    case item
-    when String
-      if name[0,1] == "/"
-	# read item from file
-	self.read name
-      elsif name.length > 0
-	path = self.class.path_for name
-	self.read path
-	@changed = false
-      else
-	raise "Empty name passed to Item.new"
-      end
-    when IO
-      read item
-    else
-      # New item
-      self.changed!
-    end
+    read item unless item.nil?
   end
   
-  def changed!
-    @changed = true
-  end
-  
-  def path
-    @path
+  def changed?
+    $stderr.puts "Changed? #{@git.status.pretty}"
+    status = @git.status[self.subject]
+    $stderr.puts "u>#{status.untracked.inspect}< t>#{status.type.inspect}<" if status
+    return true if status.nil? || status.untracked || status.type
+    false
   end
 
   def to_s
@@ -63,11 +57,10 @@ class Item
   end
 
   def save
-    return unless @changed
-    raise "Cannot save Item without Subject" if self.subject.to_s.empty?
-    @path = self.class.path_for self.subject
+    return unless changed?
     commit = nil
-    File.open(@path, "w") do |f|
+    file = Item.full_path_for(self.subject)
+    File.open(file, "w") do |f|
       if @created_by
 	commit = "Updated item"
 	@header.each do |l|
@@ -85,7 +78,7 @@ class Item
       end
       f.write @description
     end
-    @git.add path
+    @git.add file
     @git.commit commit
   end
 
@@ -96,6 +89,7 @@ class Item
   def description
     @description
   end
+
   def description= d
     @description = d
   end
@@ -103,6 +97,7 @@ class Item
   def method_missing name, *args
     setter = false
     name = name.to_s
+    name = name[1..-1] if name[0,1] == "@"
     # getter or setter called ?
     if name[-1,1] == "="
       key = name[0...-1]
@@ -142,11 +137,10 @@ private
   # Read item from IO or from path
   #
   def read from
-    unless from.is_a? IO
-      f = File.open(from)
-    else
+    if from.is_a? IO
       f = from
-      changed!
+    else
+      f = File.open(Item.full_path_for from)
     end
     begin
       lnum = 0
