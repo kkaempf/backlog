@@ -8,10 +8,20 @@ module Backlog
     def initialize
       rc = BacklogRc.instance
       begin
+	File.mkdir(rc.home) unless File.directory?(rc.home)
 	@git = ::Git.open(rc.home, :log => Rails.logger)
       rescue ArgumentError => e
 	Rails.logger.warn e.inspect
 	@git = ::Git.init rc.home
+	gitignore = File.join(rc.home, ".gitignore")
+	File.open(gitignore, "w") do |f|
+	  f.write <<-GITIGNORE
+	  *~
+	  *.bak
+	  GITIGNORE
+	end
+	@git.add gitignore
+	@git.commit "Initial .gitignore"
       end
       unless @git.config('user.name')
 	raise "'name' must be set in @rc.path"
