@@ -8,7 +8,7 @@ class Item
   extend ActiveModel::Naming
   include ActiveModel::Conversion
 
-  attr_reader :created_by, :created_on, :description
+  attr_reader :created_by, :created_on, :description, :changed
   
   def Item.full_path_for subject
     File.join(Backlog::Git.instance.git.dir.path, subject)
@@ -17,14 +17,16 @@ class Item
   def Item.find what
     case what
     when String
-      return nil unless File.exists?(Item.full_path_for subject)
+      return nil unless File.exists?(Item.full_path_for what)
       Item.new subject
     when :all
-      files = []
-      @git.status.each do |file|
-	files << file
+      items = []
+      files = Backlog::Git.instance.git.ls_files || []
+      files.each_key do |file|
+	next if file[0,1] == "."
+	items << Item.new(file)
       end
-      files
+      items
     else
       nil
     end
@@ -41,15 +43,12 @@ class Item
     @git = Backlog::Git.instance.git
     @header = []
     @headerpos = {}
-    read item unless item.nil?
-  end
-  
-  def changed?
-    $stderr.puts "Changed? #{@git.status.pretty}"
-    status = @git.status[self.subject]
-    $stderr.puts "u>#{status.untracked.inspect}< t>#{status.type.inspect}<" if status
-    return true if status.nil? || status.untracked || status.type
-    false
+    if item.nil?
+      subject = item
+      @changed = true
+    else
+      read item
+    end
   end
 
   def to_s
@@ -57,7 +56,7 @@ class Item
   end
 
   def save
-    return unless changed?
+    return nil unless @changed
     commit = nil
     file = Item.full_path_for(self.subject)
     File.open(file, "w") do |f|
@@ -79,7 +78,9 @@ class Item
       f.write @description
     end
     @git.add file
-    @git.commit commit
+    @git.commit commit if @git.status[file]
+    @changed = false
+    file
   end
 
   def persisted?
@@ -91,6 +92,7 @@ class Item
   end
 
   def description= d
+    @changed = (@description != d)
     @description = d
   end
 
@@ -114,19 +116,20 @@ class Item
 	# new header entry, compute @headerpos
 	lnum = @header.size
 	@headerpos[key] = [lnum, key.length+2]
+	@changed = true
       end
     end
     if lnum
-      if setter
-	$stderr.puts "Items.#{key} = #{value}"
+      if setter && (@header[lnum][pos..-1] != value)
+#	$stderr.puts "Items.#{key} = #{value}"
 	@header[lnum] = "#{key}: #{value}"
 	value
       else
-	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
+#	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
 	@header[lnum][pos..-1]
       end
     else
-      $stderr.puts "Items.#{key} not defined"
+#      $stderr.puts "Items.#{key} not defined"
       raise if key == "Read"
       nil
     end
@@ -139,6 +142,7 @@ private
   def read from
     if from.is_a? IO
       f = from
+      @changed = true
     else
       f = File.open(Item.full_path_for from)
     end
@@ -149,12 +153,12 @@ private
 	case line
 	when /^From (\S+)\s(.*)$/
 	  # 'From ' must be first line	      
-	  raise "Bad file format, wrong 'From '" unless lnum == 0
+	  raise "Bad file format, 'From ' not first line in #{from}" unless lnum == 0
 #	  $stderr.puts "by >#{$1}< on >#{$2}<"
 	  @created_by = $1
 	  @created_on = Time.gm(*ParseDate.parsedate($2))
 	when /^((\w+):\s+)(.*)$/
-	  $stderr.puts "<#{$2}>[#{$3}]"
+#	  $stderr.puts "<#{$2}>[#{$3}]"
 	  @headerpos[$2.capitalize] = [lnum, $1.size]
 	when ""
 	  # empty line, rest must be mail body
@@ -162,7 +166,7 @@ private
 	end
 	lnum += 1
       end
-      raise "Bad file format, wrong 'From ' format" unless @created_by && @created_on
+      raise "Bad file format, wrong 'From ' format in #{from}" unless @created_by && @created_on
     ensure
       f.close unless f == from
     end

@@ -12,6 +12,10 @@ puts "Backlog"
 
 if ARGV.empty?
   item = Item.new $stdin
-  item.save
-  puts "Item saved as #{item.path}"
+  file = item.save
+  if file
+    puts "Item saved as '#{file}'" 
+  else
+    puts "Item unchanged"
+  end
 end
