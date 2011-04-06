@@ -16,8 +16,8 @@ module Backlog
 	gitignore = File.join(rc.home, ".gitignore")
 	File.open(gitignore, "w") do |f|
 	  f.write <<-GITIGNORE
-	  *~
-	  *.bak
+*~
+*.bak
 	  GITIGNORE
 	end
 	@git.add gitignore
