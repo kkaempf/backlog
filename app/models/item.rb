@@ -8,7 +8,7 @@ class Item
   extend ActiveModel::Naming
   include ActiveModel::Conversion
 
-  attr_reader :created_by, :created_on, :description, :changed
+  attr_reader :created_by, :created_on, :description
   
   def Item.full_path_for subject
     File.join(Backlog::Git.instance.git.dir.path, subject)
@@ -45,7 +45,6 @@ class Item
     @headerpos = {}
     if item.nil?
       self.subject = item
-      @changed = true
     else
       read item
     end
@@ -56,8 +55,7 @@ class Item
   end
 
   def save
-    return nil unless @changed
-    commit = nil
+    commit_msg = nil
     #
     # 
     #
@@ -65,9 +63,9 @@ class Item
     file = Item.full_path_for(self.subject)
     File.open(file, "w") do |f|
       if file_exists_in_git
-	commit = "Updated item"
+	commit_msg = "Updated item"
       else
-	commit = "New item"
+	commit_msg = "New item"
 	@created_by = ENV['USER']
 	@created_on = Time.now
 	# Create new file
@@ -82,9 +80,13 @@ class Item
       f.write @description
     end
     @git.add file
-    @git.commit commit if @git.status[self.subject]
-    @changed = false
-    file
+    status = @git.status[self.subject]
+    if status && (status.type == 'A' || status.type == 'M')
+      @git.commit commit_msg
+      file
+    else
+      nil
+    end
   end
 
   def persisted?
@@ -96,7 +98,6 @@ class Item
   end
 
   def description= d
-    @changed = (@description != d)
     @description = d
   end
 
@@ -120,7 +121,6 @@ class Item
 	lnum = @header.size
 	pos = key.length+2
 	@headerpos[key] = [lnum, pos]
-	@changed = true
 #	$stderr.puts "New header[#{lnum}] #{key}"
       end
     end
@@ -131,7 +131,6 @@ class Item
 	end
 #	$stderr.puts "Items.#{key} = #{value}"
 	@header[lnum] = "#{key}: #{value}"
-	@changed = true
 	value
       else
 #	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
@@ -151,7 +150,6 @@ private
   def read from
     if from.is_a? IO
       f = from
-      @changed = true
     else
       path = Item.full_path_for from
       return unless File.readable?(from) # new file
