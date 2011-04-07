@@ -25,6 +25,7 @@ When /^I bounce "([^"]*)" to 'backlog'$/ do |arg1| #"
 end
     
 Then /^"([^"]*)" should appear in the backlog$/ do |arg1| #"
+  visit "/"
   subject = ""
   File.open(File.join(samples_dir, arg1)) do |m|
     while line = m.gets.chomp

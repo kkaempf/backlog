@@ -29,12 +29,11 @@ Feature: Backlog
       Given I am on the home page
       Then I should see "dummy" within ".itemlist"
       When I follow "dummy"
-      Then I should see "dummy" within "#subject"
-      And I should see "foo foo" within "#description"
-      And I should see "Tester" within "#persona"
+      Then I should see "dummy" as "item_subject"
+      Then I should see "foo foo" within "#description"
+      And I should see "Tester" as "item_persona"
 
    Scenario: Bouncing a feature from mail
       Given I have a mail called "sample-mail"
       When I bounce "sample-mail" to 'backlog'
       Then "sample-mail" should appear in the backlog
-
