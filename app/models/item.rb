@@ -129,12 +129,11 @@ class Item
 	@header[lnum] = "#{key}: #{value}"
 	return value
       else
-	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
+#	$stderr.puts "Items.#{key} is #{@header[lnum][pos..-1]}"
 	return @header[lnum][pos..-1]
       end
     else
-      $stderr.puts "Items.#{key} not defined"
-      raise if key == "Read"
+#      $stderr.puts "Items.#{key} not defined"
       nil
     end
   end
