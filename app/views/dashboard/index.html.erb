@@ -9,6 +9,15 @@ Dir: <span id="home"><%= @rc.home %></span>
 <h1>Backlog - Dashboard</h1>
 </div>
 
+<% [:info, :error].each do |key| %>
+  <% if flash[key] %>
+    <div class="grid_12" class="<%= key %>" id="flash">
+    <%= flash[key] %>
+    <% flash[key] = nil %>
+    </div>
+  <% end %>
+<% end %>
+
 <div class="grid_4">
   <div class="itemlist">
   <h2>Epics</h2>

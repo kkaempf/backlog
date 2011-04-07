@@ -15,11 +15,29 @@ class Item
     File.join(Backlog::Git.instance.git.dir.path, subject)
   end
 
+  def Item.find_by_id id
+    files = Backlog::Git.instance.git.ls_files || []
+    files.each_key do |file|
+      next if file[0,1] == "."
+      item = Item.new(file)
+      $stderr.puts "#{item.id}:#{item}"
+      return item if item.id == id
+    end
+    nil
+  end
+
   def Item.find what
     case what
     when String
       return nil unless File.exists?(Item.full_path_for what)
       Item.new subject
+    when Hash
+      id = what[:id]
+      if id
+	Item.find_by_id id
+      else
+	nil
+      end
     when :all
       items = []
       files = Backlog::Git.instance.git.ls_files || []
