@@ -1,6 +1,7 @@
 require 'parsedate'
 require 'active_model'
 require 'lib/git'
+require 'simple_uuid'
 
 class Item
   include ActiveModel::Validations
@@ -41,17 +42,27 @@ class Item
   # 
   def initialize item = nil
     @git = Backlog::Git.instance.git
+    #
+    # array of header lines
     @header = []
+    #
+    # hash of header keys => [ index into @header, start pos of value ]
     @headerpos = {}
-    if item.nil?
-      self.subject = item
-    else
-      read item
+    
+    #
+    #  read item properties
+    read item unless item.nil?
+    if self.uuid.nil?
+      self.uuid = SimpleUUID::UUID.new.to_guid
     end
   end
 
+  def id
+    self.uuid
+  end
+
   def to_s
-    self.subject
+    self.subject || self.id
   end
 
   def save

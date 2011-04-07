@@ -29,6 +29,7 @@ gem 'rails', '3.0.5'
 
 gem 'git'
 gem 'dynamic_form'
+gem 'simple_uuid'
 
 group :development, :test do
  # nothing
