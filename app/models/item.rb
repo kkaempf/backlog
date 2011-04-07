@@ -15,6 +15,24 @@ class Item
     File.join(Backlog::Git.instance.git.dir.path, subject)
   end
 
+  def Item.remove id
+    $stderr.puts "Item.remove #{id}"
+    git = Backlog::Git.instance.git
+    files = git.ls_files || []
+    files.each_key do |file|
+      next if file[0,1] == "."
+      item = Item.new(file)
+#      $stderr.puts "#{item.id}:#{item}"
+      if item.id == id
+	$stderr.puts "Item.remove! #{file}"
+	git.remove file
+	git.commit "Removed by #{ENV['USER']} on #{Time.now}"
+	return true
+      end
+    end
+    nil
+  end
+
   def Item.find_by_id id
     files = Backlog::Git.instance.git.ls_files || []
     files.each_key do |file|
