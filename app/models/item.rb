@@ -9,10 +9,16 @@ class Item
   extend ActiveModel::Naming
   include ActiveModel::Conversion
 
+  @@sorted = []
+
   attr_reader :created_by, :created_on, :description
   
   def Item.full_path_for subject
     File.join(Backlog::Git.instance.git.dir.path, subject)
+  end
+
+  def Item.sort list
+    @@sorted = list
   end
 
   def Item.remove id
@@ -57,13 +63,27 @@ class Item
 	nil
       end
     when :all
-      items = []
+      items = {}
       files = Backlog::Git.instance.git.ls_files || []
       files.each_key do |file|
 	next if file[0,1] == "."
-	items << Item.new(file)
+	item = Item.new(file)
+	items[item.id] = item
       end
-      items
+      result = []
+      if @@sorted.size > 0
+	@@sorted.each do |key|
+	  item = items[key]
+	  if item
+	    result << item
+	    items.delete key
+	  end
+	end
+      end
+      items.each_value do |item|
+	result << item
+      end
+      result
     else
       nil
     end

@@ -24,4 +24,10 @@ class BacklogController < ApplicationController
 
     redirect_to "/"
   end
+  
+  def sort
+    epics_list = params["epics_list"]
+    Item.sort epics_list
+    redirect_to "/"
+  end
 end

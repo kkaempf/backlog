@@ -6,7 +6,7 @@ Backlog::Application.routes.draw do
   get "dashboard/index"
 
   get "backlog/new"
-  get "backlog/sort"
+  post "backlog/sort"
   post "backlog/prioritize"
   post "backlog/progress"
   post "backlog/trash"
