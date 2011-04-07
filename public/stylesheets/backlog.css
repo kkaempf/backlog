@@ -50,6 +50,18 @@ a {
   border-width: 4px;
 }
 
+.footer {
+  float: left;
+}
+
+#trash {
+  float: right;
+  margin: 10px 0px 0px 0px;
+  text-align: center;
+  background-color: #3c3739;
+  border-radius: 5px;
+}
+
 #header {
   border-radius: 15px;
   height: 30px;
@@ -62,4 +74,8 @@ a {
   color: #ECD078;
   font-style: bold;
   padding: 5px;
+}
+
+#trash {
+  color: #F99400;
 }

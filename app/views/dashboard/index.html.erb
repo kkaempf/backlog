@@ -19,18 +19,20 @@ Dir: <span id="home"><%= @rc.home %></span>
 <% end %>
 
 <div class="grid_4">
-  <div class="itemlist">
+  <div class="itemlist" id="epics">
   <h2>Epics</h2>
   <% @items.each do |item| %>
-    <div class="item">
+    <div class="item" id="<%= item.id %>">
       <%= link_to item.subject, item_path(item) %>
     </div>
+    <%= draggable_element "#{item.id}", :revert => true %>
   <% end %>
   </div>
+  <%= drop_receiving_element "epics", :url => { :controller => "backlog", :action => "sort" } %>
 </div>
 
 <div class="grid_4">
-  <div class="itemlist">
+  <div class="itemlist" id="prioritized">
   <h2>Prioritized</h2>
   <% @items.each do |item| %>
     <div class="item">
@@ -38,10 +40,11 @@ Dir: <span id="home"><%= @rc.home %></span>
     </div>
   <% end %>
   </div>
+  <%= drop_receiving_element "prioritized", :url => { :controller => "backlog", :action => "prioritize" } %>
 </div>
 
 <div class="grid_4">
-  <div class="itemlist">
+  <div class="itemlist" id="in_progress">
   <h2>In progress</h2>
   <% @items.each do |item| %>
     <div class="item">
@@ -49,11 +52,17 @@ Dir: <span id="home"><%= @rc.home %></span>
     </div>
   <% end %>
   </div>
+  <%= drop_receiving_element "in_progress", :url => { :controller => "backlog", :action => "progress" } %>
 </div>
 
 <div class="clear"></div>
-<div class="grid_1">
-  <div class="button_new">
-  <%= link_to "new", { :action => "new", :controller => "backlog" } %>
+<div class="grid_12" id="footer">
+  <div class="grid_1">
+    <div class="button_new">
+    <%= link_to "new", { :action => "new", :controller => "backlog" } %>
+    </div>
   </div>
+  <div class="grid_10"></div>
+  <div class="grid_1" id="trash">Trash</div>
 </div>
+<%= drop_receiving_element "trash", :url => { :controller => "backlog", :action => "trash" }, :confirm => "Really delete?", :loading => visual_effect(:fade)  %>
