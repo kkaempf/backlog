@@ -1,14 +1,50 @@
-<div id="header">
+<div class="grid_12" id="header">
 Name: <span id="name"><%= @git.config('user.name') %></span>
 EMail: <span id="email"><%= @git.config('user.email') %></span>
 Dir: <span id="home"><%= @rc.home %></span>
 </div>
-<h1>Project Backlog - Dashboard</h1>
-<h2>Current backlog</h2>
-<ul>
-<% @items.each do |item| %>
-<li><%= item.subject %></li>
-<% end %>
-</ul>
-<hr/>
-<%= link_to "new", { :action => "new", :controller => "backlog" } %>
+<div class="clear"></div>
+
+<div class="grid_12">
+<h1>Backlog - Dashboard</h1>
+</div>
+
+<div class="grid_4">
+  <div class="itemlist">
+  <h2>Epics</h2>
+  <% @items.each do |item| %>
+    <div class="item">
+      <%= link_to item.subject, item_path(item) %>
+    </div>
+  <% end %>
+  </div>
+</div>
+
+<div class="grid_4">
+  <div class="itemlist">
+  <h2>Prioritized</h2>
+  <% @items.each do |item| %>
+    <div class="item">
+      <%= link_to item.subject, item_path(item) %>
+    </div>
+  <% end %>
+  </div>
+</div>
+
+<div class="grid_4">
+  <div class="itemlist">
+  <h2>In progress</h2>
+  <% @items.each do |item| %>
+    <div class="item">
+      <%= link_to item.subject, item_path(item) %>
+    </div>
+  <% end %>
+  </div>
+</div>
+
+<div class="clear"></div>
+<div class="grid_1">
+  <div class="button_new">
+  <%= link_to "new", { :action => "new", :controller => "backlog" } %>
+  </div>
+</div>

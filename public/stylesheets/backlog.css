@@ -1,12 +1,65 @@
+/*
+ * color scheme: http://www.colourlovers.com/palette/694737/Thought_Provoking
+ * http://www.colourlovers.com/palette/1513157/myhappycolours_%E2%97%95_%E2%80%BF_%E2%97%95
+ */
+
+body {
+  background-color: #544F51;
+  color: #F99400;
+}
+
+h1 {
+  text-align: center;
+}
+
+.grid_4 {
+  text-align: center;
+  border-radius: 15px;
+  background-color: #5c5759;
+  color: #D95B43;
+}
+
+.itemlist {
+  padding: 5px;
+}
+
+.item {
+  text-align: left;
+  margin: 0px 0px 3px 0px;
+  padding: 5px;
+  background-color: #6c6769;
+  border-radius: 5px;
+}
+
+.item:hover {
+  background-color: #F99400;
+  color: #544F51;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.button_new {
+  margin: 10px 0px 0px 0px;
+  text-align: center;
+  background-color: #6c6769;
+  border-radius: 5px;
+  border-style: ridge;
+  border-width: 4px;
+}
+
 #header {
-  width: 1024px;
+  border-radius: 15px;
   height: 30px;
+  padding: 5px;
   font-style: italic;
-  background: aqua;
+  background: #542437;
 }
 
 #name {
-  color: gray;
+  color: #ECD078;
   font-style: bold;
   padding: 5px;
 }
