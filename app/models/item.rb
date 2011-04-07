@@ -20,7 +20,7 @@ class Item
     files.each_key do |file|
       next if file[0,1] == "."
       item = Item.new(file)
-      $stderr.puts "#{item.id}:#{item}"
+#      $stderr.puts "#{item.id}:#{item}"
       return item if item.id == id
     end
     nil
@@ -117,10 +117,6 @@ class Item
     true
   end
 
-  def description
-    @description
-  end
-
   def description= d
     @description = d
   end
@@ -183,7 +179,7 @@ private
     begin
       lnum = 0
       while line = f.gets
-	case line
+	case line.chomp
 	when /^From (\S+)\s(.*)$/
 	  # 'From ' must be first line	      
 	  raise "Bad file format, 'From ' at line #{lnum} in #{from}" unless lnum == 0
@@ -196,7 +192,7 @@ private
 	  @headerpos[$2.capitalize] = [@header.size-1, $1.size]
 	when ""
 	  # empty line, rest must be mail body
-	  @description = f.read
+	  self.description = f.read
 	end
 	lnum += 1
       end
