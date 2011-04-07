@@ -7,7 +7,6 @@ Given /^I have a mail called "([^"]*)"$/ do |arg1| #"
 end
 
 Given /^I have mails with features$/ do  #"
-  $stderr.puts "Samples: #{samples_dir}"
   @mails = []
   Dir.open(samples_dir) do |d|
     d.each do |f|
@@ -18,7 +17,6 @@ Given /^I have mails with features$/ do  #"
 end
   
 When /^I bounce "([^"]*)" to 'backlog'$/ do |arg1| #"
-  $stderr.puts "Bounce #{arg1} to 'backlog'"
   File.open(File.join(samples_dir, arg1)) do |m|
     IO.popen(File.expand_path(File.join(File.dirname(__FILE__),"..","..","script","backlog")),"w") do |p|
       p.write(m.read)
