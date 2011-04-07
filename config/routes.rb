@@ -7,8 +7,8 @@ Backlog::Application.routes.draw do
 
   get "backlog/new"
   get "backlog/sort"
-  get "backlog/prioritize"
-  get "backlog/progress"
+  post "backlog/prioritize"
+  post "backlog/progress"
   post "backlog/trash"
 
   resources :items
