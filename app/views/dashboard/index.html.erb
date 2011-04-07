@@ -21,34 +21,44 @@ Dir: <span id="home"><%= @rc.home %></span>
 <div class="grid_4">
   <div class="itemlist" id="epics">
   <h2>Epics</h2>
+  <div class="itemlist" id="epics_list">
   <% @items.each do |item| %>
-    <div class="item" id="<%= item.id %>">
+    <div class="item" id="epic_<%= item.id %>">
+      <div class="item_link">
       <%= link_to item.subject, item_path(item) %>
+      </div>
+      <%= draggable_element "epic_#{item.id}", :revert => true %>
+      <a class="item_handle" href="#" onclick="return false"> </a>
     </div>
-    <%= draggable_element "#{item.id}", :revert => true %>
   <% end %>
   </div>
-  <%= drop_receiving_element "epics", :url => { :controller => "backlog", :action => "sort" } %>
+  <%= sortable_element "epics_list", :url => { :controller =>
+"backlog", :action => "sort" }, :tag => "div", :elements => "$$('.item')",
+:handles => "$$('.item_handle')",
+:constraint => :vertical %>
+  </div>
 </div>
 
 <div class="grid_4">
   <div class="itemlist" id="prioritized">
   <h2>Prioritized</h2>
   <% @items.each do |item| %>
-    <div class="item">
+    <div class="item" id="prio_<%= item.id %>">
       <%= link_to item.subject, item_path(item) %>
+      <%= draggable_element "prio_#{item.id}", :revert => true %>
     </div>
   <% end %>
   </div>
-  <%= drop_receiving_element "prioritized", :url => { :controller => "backlog", :action => "prioritize" } %>
+  <%= sortable_element "prioritized", :url => { :controller => "backlog", :action => "prioritize" } %>
 </div>
 
 <div class="grid_4">
   <div class="itemlist" id="in_progress">
   <h2>In progress</h2>
   <% @items.each do |item| %>
-    <div class="item">
+    <div class="item" id="prog_<%= item.id %>">
       <%= link_to item.subject, item_path(item) %>
+      <%= draggable_element "prog_#{item.id}", :revert => true %>
     </div>
   <% end %>
   </div>

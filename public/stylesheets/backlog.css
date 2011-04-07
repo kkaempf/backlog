@@ -24,11 +24,27 @@ h1 {
 }
 
 .item {
-  text-align: left;
   margin: 0px 0px 3px 0px;
-  padding: 5px;
   background-color: #6c6769;
   border-radius: 5px;
+  margin: 5px;
+  clear: both;
+  height: 1.5em;
+}
+
+.item_link {
+  padding: 0px 0px 5px 5px;
+  float: left;
+  text-align: left;
+}
+
+.item_handle {
+  border-radius: 0px 5px 5px 0px;
+  float: right;
+  background-color: #4c4749;
+  width: 5%;
+  padding: 0px;
+  height: 1.5em;
 }
 
 .item:hover {
