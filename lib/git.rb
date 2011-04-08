@@ -30,5 +30,11 @@ module Backlog
 	raise "'email' must be set in @rc.path"
       end
     end
-  end
-end
+    
+    def path_for file
+      File.join(Git.instance.git.dir.path, file)
+    end
+
+  end # class
+  
+end # module

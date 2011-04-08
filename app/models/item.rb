@@ -1,3 +1,8 @@
+#
+# Item - Backlog item
+#
+#
+
 require 'parsedate'
 require 'active_model'
 require 'lib/git'
@@ -9,85 +14,51 @@ class Item
   extend ActiveModel::Naming
   include ActiveModel::Conversion
 
-  @@sorted = []
+  attr_reader :created_by, :created_on, :subject, :uuid, :description
 
-  attr_reader :created_by, :created_on, :description
-  
+  @@cache = ItemCache.instance
+
+############################################################################
+# Class functions
+
+  #
+  # full_path_for
+  #
+
   def Item.full_path_for subject
-    File.join(Backlog::Git.instance.git.dir.path, subject)
+    Backlog::Git.instance.path_for subject
   end
 
-  def Item.sort list
-    @@sorted = list
-  end
-
-  def Item.remove id
-    $stderr.puts "Item.remove #{id}"
-    git = Backlog::Git.instance.git
-    files = git.ls_files || []
-    files.each_key do |file|
-      next if file[0,1] == "."
-      item = Item.new(file)
-#      $stderr.puts "#{item.id}:#{item}"
-      if item.id == id
-	$stderr.puts "Item.remove! #{file}"
-	git.remove file
-	git.commit "Removed by #{ENV['USER']} on #{Time.now}"
-	return true
-      end
-    end
-    nil
-  end
-
-  def Item.find_by_id id
-    files = Backlog::Git.instance.git.ls_files || []
-    files.each_key do |file|
-      next if file[0,1] == "."
-      item = Item.new(file)
-#      $stderr.puts "#{item.id}:#{item}"
-      return item if item.id == id
-    end
-    nil
-  end
+  #
+  # find
+  #
 
   def Item.find what
     case what
     when String
       return nil unless File.exists?(Item.full_path_for what)
-      Item.new subject
+      @@cache.subject(subject) || Item.new(subject)
     when Hash
       id = what[:id]
       if id
-	Item.find_by_id id
+	@@cache.uuid id
       else
 	nil
       end
     when :all
-      items = {}
-      files = Backlog::Git.instance.git.ls_files || []
-      files.each_key do |file|
-	next if file[0,1] == "."
-	item = Item.new(file)
-	items[item.id] = item
+      # return all items in sorted order
+      items = []
+      @@cache.sorted.each do |uuid|
+	items << @@cache.uuid(uuid)
       end
-      result = []
-      if @@sorted.size > 0
-	@@sorted.each do |key|
-	  item = items[key]
-	  if item
-	    result << item
-	    items.delete key
-	  end
-	end
-      end
-      items.each_value do |item|
-	result << item
-      end
-      result
+      items
     else
       nil
     end
   end
+
+############################################################################
+# Object functions
 
   #
   # Create Item
@@ -96,8 +67,7 @@ class Item
   #   if File.readable? => read new item from file
   #   else => use as name of existing item
   # 
-  def initialize item = nil
-    @git = Backlog::Git.instance.git
+  def initialize item = nil, flags = {}
     #
     # array of header lines
     @header = []
@@ -108,21 +78,29 @@ class Item
     #
     #  read item properties
     read item unless item.nil?
-    if self.uuid.nil?
-      self.uuid = SimpleUUID::UUID.new.to_guid
+    if @uuid.nil?
+      # new item
+      self.uuid = SimpleUUID::UUID.new.to_guid.to_sym
     end
+    @@cache.add(self) unless flags[:no_cache]
   end
 
   def id
-    self.uuid
+    @uuid.to_s
   end
 
   def to_s
-    self.subject || self.id
+    @subject || self.id
+  end
+
+  def subject= subject
+#    $stderr.puts "#{item}.subject = #{subject}"
+    @@cache.change_subject self, subject
+    @subject = subject
   end
 
   def save
-    file = Item.full_path_for(self.subject)
+    file = Item.full_path_for(@subject)
     File.open(file, "w") do |f|
       if @created_on.nil?
 	@created_by = ENV['USER']
@@ -131,23 +109,25 @@ class Item
 	@header.push "Date: #{@created_on}"
       end
       f.puts "From #{@created_by} #{@created_on.asctime}"
+      @header.push "Uuid: #{@uuid}"
+      @header.push "Subject: #{@subject}"
       @header.each do |l|
 	f.puts l
       end
       f.puts ""
       f.write @description
     end
-    @git.add file
-    status = @git.status[self.subject]
+    git = Backlog::Git.instance.git
+    git.add file
+    status = git.status[@subject]
     return nil unless status
     commit_msg = nil
     case status.type
     when 'A': commit_msg = "New item"
     when 'M': commit_msg = "Modified item"
-    when 'D': commit_msg = "Dropped item"
     end
     return nil if commit_msg.nil?
-    @git.commit commit_msg 
+    git.commit commit_msg 
     file
   end
 
@@ -202,6 +182,10 @@ class Item
   end
 
 private
+  def uuid= uuid
+    @uuid = uuid.to_sym
+  end
+
   #
   # Read item from IO or from path
   #
@@ -225,9 +209,16 @@ private
 	  @created_by = $1
 	  @created_on = Time.gm(*ParseDate.parsedate($2))
 	when /^((\w+):\s+)(.*)$/
-	  @header << line.chomp!
-#	  $stderr.puts "<#{$2}>[#{$3}]"
-	  @headerpos[$2.capitalize] = [@header.size-1, $1.size]
+	  key = $2.capitalize
+#	  $stderr.puts "Key '#{key}':#{$3}"
+	  case key
+	  when "Uuid": self.uuid = $3
+	  when "Subject": self.subject = $3
+	  else
+	    @header << $&
+	    #	  $stderr.puts "<#{$2}>[#{$3}]"
+	    @headerpos[$2.capitalize] = [@header.size-1, $1.size]
+	  end
 	when ""
 	  # empty line, rest must be mail body
 	  self.description = f.read
