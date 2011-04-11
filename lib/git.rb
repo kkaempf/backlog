@@ -1,5 +1,6 @@
 require 'git'
 require 'singleton'
+require 'lib/backlog_rc'
 
 module Backlog
   class Git
