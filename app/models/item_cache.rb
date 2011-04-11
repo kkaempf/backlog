@@ -16,6 +16,7 @@ class ItemCache
     @sorted = []
     @uuid = {}
     @subject = {}
+    fill_cache
   end
   
   def uuid id
@@ -88,7 +89,8 @@ class ItemCache
     end
     git = git.git # Ouch!
     git.add SORT_ORDER_NAME
-    if git.status[SORT_ORDER_NAME]
+    status = git.status[SORT_ORDER_NAME]
+    if status && status.type
       git.commit ".sort_order changed"
     end
  end
@@ -124,6 +126,7 @@ class ItemCache
     end
     @uuid[uuid] = item
     @sorted << uuid
+    write_sort_order
   end
 
   #
@@ -136,8 +139,6 @@ class ItemCache
     $stderr.puts "Item.remove #{item}"
     uuid = item.uuid
 
-    git.remove item.subject
-    git.commit "Removed by #{ENV['USER']} on #{Time.now}"
     @sorted.delete uuid
     @uuid.delete uuid
     @subject.delete item.subject

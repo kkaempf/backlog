@@ -16,7 +16,9 @@ class Item
 
   attr_reader :created_by, :created_on, :subject, :uuid, :description
 
-  @@cache = ItemCache.instance
+  validates_each :subject do |record, attr, value|
+    record.errors.add attr, "missing" unless record.subject && record.subject.size > 0
+  end
 
 ############################################################################
 # Class functions
@@ -34,6 +36,7 @@ class Item
   #
 
   def Item.find what
+    @@cache ||= ItemCache.instance
     case what
     when String
       return nil unless File.exists?(Item.full_path_for what)
@@ -82,7 +85,10 @@ class Item
       # new item
       self.uuid = SimpleUUID::UUID.new.to_guid.to_sym
     end
-    @@cache.add(self) unless flags[:no_cache]
+    unless flags[:no_cache]
+      @@cache ||= ItemCache.instance
+      @@cache.add(self) 
+    end
   end
 
   def id
@@ -94,12 +100,14 @@ class Item
   end
 
   def subject= subject
+    @@cache ||= ItemCache.instance
 #    $stderr.puts "#{item}.subject = #{subject}"
     @@cache.change_subject self, subject
     @subject = subject
   end
 
   def save
+    return false unless self.valid?
     file = Item.full_path_for(@subject)
     File.open(file, "w") do |f|
       if @created_on.nil?

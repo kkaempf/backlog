@@ -25,6 +25,9 @@ class BacklogTemplate
 - usecase: 50x10
 	TEMPLATE
       end
+      git = Backlog::Git.instance.git
+      git.add BACKLOG_TEMPLATE_PATH
+      git.commit("Created default .template")
     end
     File.open(@path) do |f|
       @template = YAML.load(f)

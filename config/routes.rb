@@ -5,13 +5,12 @@ Backlog::Application.routes.draw do
 
   get "dashboard/index"
 
-  get "backlog/new"
   post "backlog/sort"
   post "backlog/prioritize"
   post "backlog/progress"
-  post "backlog/trash"
 
   resources :items
+  delete "items/destroy" # JavaScript drop_receiving_element
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

@@ -69,10 +69,10 @@ Dir: <span id="home"><%= @rc.home %></span>
 <div class="grid_12" id="footer">
   <div class="grid_1">
     <div class="button_new">
-    <%= link_to "new", { :action => "new", :controller => "backlog" } %>
+    <%= link_to "new", new_item_url %>
     </div>
   </div>
   <div class="grid_10"></div>
   <div class="grid_1" id="trash">Trash</div>
 </div>
-<%= drop_receiving_element "trash", :url => { :controller => "backlog", :action => "trash" }, :confirm => "Really delete?", :loading => visual_effect(:fade)  %>
+<%= drop_receiving_element "trash", :url => { :controller => "items", :action => "destroy" }, :confirm => "Really delete?", :loading => visual_effect(:fade)  %>
