@@ -1,6 +1,6 @@
 <h1>New backlog entry</h1>
 
-<%= form_for Item.new do |f| %>
+<%= form_for :item do |f| %>
   <%= f.error_messages %>
 
   <p>
@@ -12,10 +12,21 @@
     <%= f.text_area :description, :rows => 6 %>
   </p>
   <!-- START_HIGHLIGHT -->
+  <% @template.each do |t| %>
+  <%   t.each do |k,v| %>
   <p>
-    <%= f.label :persona %><br />
-    <%= f.text_field :persona %>
+    <%= f.label k.to_sym %><br />
+    <% case v
+       when /(\d+x\d+)/ %>
+       <%= f.text_area k.to_sym, :size => "#{v}" %>
+    <% when /\d+/, Fixnum %>
+       <%= f.text_field k.to_sym, :size => "#{v}" %>
+    <% else %>
+       <%= f.text_field k.to_sym %>
+    <% end %>
   </p>
+  <%   end %>
+  <% end %>
   <!-- END_HIGHLIGHT -->
 
   <p>

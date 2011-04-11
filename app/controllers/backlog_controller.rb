@@ -1,5 +1,8 @@
+require 'lib/backlog_template'
+
 class BacklogController < ApplicationController
   def new
+    @template = BacklogTemplate.new
   end
   
   #
