@@ -1,9 +1,9 @@
 require 'yaml'
 require 'singleton'
 
-BACKLOGRC_PATH = "~/.backlogrc"
 module Backlog
   class BacklogRc
+    BACKLOGRC_PATH = ENV['BACKLOGRC'] || "~/.backlogrc"
     include Singleton
 
     attr_reader :home, :name, :email, :path, :origin
@@ -19,7 +19,7 @@ module Backlog
 	  self.origin = rc["origin"]
 	end
       rescue
-	Rails.logger.warn "~/.backlogrc not readable"
+	Rails.logger.warn "#{BACKLOGRC_PATH} not readable"
       end
       self.home = File.expand_path(@home || "~/backlog")
     end
