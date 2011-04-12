@@ -1,10 +1,11 @@
 require 'lib/git'
+require 'lib/backlog_rc'
 
 class DashboardController < ApplicationController
   
   def initialize
     @git = Backlog::Git.instance.git
-    @rc = BacklogRc.instance
+    @rc = Backlog::BacklogRc.instance
     super
   end
 
