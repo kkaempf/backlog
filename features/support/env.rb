@@ -7,6 +7,11 @@
 ENV["RAILS_ENV"] ||= "test"
 require File.expand_path(File.dirname(__FILE__) + '/../../config/environment')
 
+# Pathes to test samples
+GITPATH = "tmp/backlog.git"
+GITORIGIN = "git@git.localhost.localdomain:backlog/backlog.git"
+BACKLOGRC = "tmp/backlogrc"
+
 require 'cucumber/formatter/unicode' # Remove this line if you don't want Cucumber Unicode support
 require 'cucumber/rails/world'
 require 'cucumber/rails/active_record'

@@ -3,7 +3,7 @@ Given /^I create a sample backlogrc$/ do
     $stderr.puts "At #{d}, pwd #{Dir.pwd}"
     File.delete(BACKLOGRC) if File.exists?(BACKLOGRC)
     File.open(BACKLOGRC, "w+") do |f|
-      f.puts "home: #{d}"
+      f.puts "home: #{File.join(d,GITPATH)}"
       f.puts "origin: #{GITORIGIN}"
     end
   end
