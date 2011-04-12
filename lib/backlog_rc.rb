@@ -1,15 +1,11 @@
-require 'active_model'
 require 'yaml'
 require 'singleton'
 
 BACKLOGRC_PATH = "~/.backlogrc"
 class BacklogRc
   include Singleton
-  include ActiveModel::Validations
-  extend ActiveModel::Naming
 
-  validates :home, :presence => true
-  attr_reader :name, :email, :path
+  attr_reader :home, :name, :email, :path, :origin
 
   def initialize
     @path = File.expand_path(BACKLOGRC_PATH)
@@ -19,6 +15,7 @@ class BacklogRc
 	self.home = rc["home"]
 	self.name = rc["name"]
 	self.email = rc["email"]
+	self.origin = rc["origin"]
       end
     rescue
       Rails.logger.warn "~/.backlogrc not readable"
@@ -29,8 +26,5 @@ class BacklogRc
   def home= homedir
     Dir.mkdir(homedir) unless File.directory? homedir
     @home = homedir
-  end
-  def home
-    @home
   end
 end
