@@ -30,8 +30,15 @@ module Backlog
       unless @git.config('user.email')
 	raise "'email' must be set in @rc.path"
       end
+      if rc.origin
+	Dir.chdir do |dir|
+	  system "git remote add origin #{rc.origin}"
+	end
+      else
+	Rails.logger.warn "'origin' not set in backlogrc"
+      end
     end
-    
+
     def path_for file
       File.join(Git.instance.git.dir.path, file)
     end

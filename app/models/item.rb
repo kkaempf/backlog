@@ -6,6 +6,7 @@
 require 'parsedate'
 require 'active_model'
 require 'lib/git'
+require 'lib/item_cache'
 require 'simple_uuid'
 
 class Item
@@ -36,23 +37,22 @@ class Item
   #
 
   def Item.find what
-    @@cache ||= ItemCache.instance
     case what
     when String
       return nil unless File.exists?(Item.full_path_for what)
-      @@cache.subject(subject) || Item.new(subject)
+      ItemCache.subject(subject) || Item.new(subject)
     when Hash
       id = what[:id]
       if id
-	@@cache.uuid id
+	ItemCache.uuid id
       else
 	nil
       end
     when :all
       # return all items in sorted order
       items = []
-      @@cache.sorted.each do |uuid|
-	items << @@cache.uuid(uuid)
+      ItemCache.sorted.each do |uuid|
+	items << ItemCache.uuid(uuid)
       end
       items
     else
@@ -70,7 +70,7 @@ class Item
   #   if File.readable? => read new item from file
   #   else => use as name of existing item
   # 
-  def initialize item = nil, flags = {}
+  def initialize item = nil
     #
     # array of header lines
     @header = []
@@ -85,10 +85,7 @@ class Item
       # new item
       self.uuid = SimpleUUID::UUID.new.to_guid.to_sym
     end
-    unless flags[:no_cache]
-      @@cache ||= ItemCache.instance
-      @@cache.add(self) 
-    end
+    ItemCache.add(self) 
   end
 
   def id
@@ -100,9 +97,8 @@ class Item
   end
 
   def subject= subject
-    @@cache ||= ItemCache.instance
 #    $stderr.puts "#{item}.subject = #{subject}"
-    @@cache.change_subject self, subject
+    ItemCache.change_subject self, subject
     @subject = subject
   end
 
