@@ -14,7 +14,6 @@ BACKLOGRC = "tmp/backlogrc"
 
 require 'cucumber/formatter/unicode' # Remove this line if you don't want Cucumber Unicode support
 require 'cucumber/rails/world'
-require 'cucumber/rails/active_record'
 require 'cucumber/web/tableish'
 
 require 'capybara/rails'
@@ -36,7 +35,7 @@ Capybara.default_selector = :css
 # pages, more or less in the same way your application would behave in the
 # default production environment. It's not recommended to do this for all
 # of your scenarios, as this makes it hard to discover errors in your application.
-ActionController::Base.allow_rescue = false
+#ActionController::Base.allow_rescue = false
 
 # If you set this to true, each scenario will run in a database transaction.
 # You can still turn off transactions on a per-scenario basis, simply tagging 
