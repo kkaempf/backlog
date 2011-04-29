@@ -27,6 +27,7 @@ private
   #
   def read path
     raise "File #{path} unreadable" unless File.readable?(path)
+    $stderr.puts "Item.read(#{path})"
     File.open(path) do |f|
       lnum = 0
       while line = f.gets
@@ -76,8 +77,8 @@ public
     
     if path_prefix
       #  read item properties
-      self.prefix = path_prefix
-      self.read File.join(path_prefix, subject_or_path)
+      @prefix = path_prefix
+      read File.join(@prefix, subject_or_path)
     else
       @created_by = ENV['USER']
       @header.push "From: #{@created_by}"

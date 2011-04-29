@@ -21,28 +21,30 @@ class ItemCache
     @path = {}     # path -> nil|""|item|subject
     @subject = {}  # subject -> item|path
 
-    dir = File.join(Backlog::Git.instance.git.dir.path, prefix)
-    raise "No such category dir" unless File.directory?(dir)
+    @dir = File.join(Backlog::Git.instance.git.dir.path, prefix)
+    raise "No such category dir" unless File.directory?(@dir)
+    $stderr.puts "ItemCache.new(#{prefix}) -> #{@dir}"
 
-    # limit ls-files to category
     #
-    Dir.chdir(dir) do |x|
-      #
-      # The files define the items of the category. The .order file just adds ordering information.
-      #
-      files = Backlog::Git.instance.git.ls_files
-      files.each_key do |file|
-	next if file[0,1] == "."
-	$stderr.puts "Filling cache with '#{file}'"
-	@path[file] = ""
-      end
-      read_sort_order
+    # The files define the items of the category. The .order file just adds ordering information.
+    #
+    files = Backlog::Git.instance.git.ls_files @prefix
+    plen = prefix.length
+    files.each_key do |file|
+      next if file[0,1] == "."
+      file = file[plen+1..-1] # remove prefix
+      next if file[0,1] == "."
+      $stderr.puts "Filling cache with '#{file}'"
+      @path[file] = ""
     end
+
+    read_sort_order
     
     # fill subject if needed
     @path.each do |p,s|
+      $stderr.puts "@path[#{p}] ->#{s}<"
       if s.empty?
-	item = Item.new p, dir
+	item = Item.new p, @dir
 	@path[p] = item
 	@subject[item.subject] = item
       end
@@ -111,7 +113,7 @@ class ItemCache
     if item_or_path.is_a? Item
       item = item_or_path
     else
-      item = Item.new item.to_s, @prefix
+      item = Item.new item.to_s, @dir
     end
     s = @subject[item.subject]
     raise "Subject '#{item.subject}' already exists as #{s}" if s
@@ -173,27 +175,28 @@ private
   # <path>[<space><subject>]
 
   def create_sort_order
-    $stderr.puts "Creating #{SORT_ORDER_NAME}"
+    $stderr.puts "Creating #{@prefix}/#{SORT_ORDER_NAME}"
     # .sort_order not readable
     # initial sort_order creation
     @path.each_key do |path|
       @sorted << path
-      item = Item.new path
+      item = Item.new path, @dir
+      $stderr.puts "#{path} -> #{item.subjectg}"
       @subject[item.subject] = item
-      @path[path] = item
     end
     @sorted.sort!
-    $stderr.puts "Created #{@sorted.size} entries for #{SORT_ORDER_NAME}"
+    $stderr.puts "Created #{@sorted.size} entries for #{@prefix}/#{SORT_ORDER_NAME}"
   end
 
   #
-  # read_sort_order from current directory
+  # read_sort_order from @prefix
   #
   def read_sort_order
-    return create_sort_order unless File.readable?(SORT_ORDER_NAME)
-    $stderr.puts "Reading #{SORT_ORDER_NAME}"
+    name = File.join(@dir, SORT_ORDER_NAME)
+    return create_sort_order unless File.readable?(name)
+    $stderr.puts "Reading #{name}"
     @sorted.clear
-    File.open(sort_order_file) do |f|
+    File.open(name) do |f|
       while line = f.gets
 	line.chomp!
 	next if line[0,1] == "#"
@@ -201,7 +204,7 @@ private
 	if line =~ /^(\S+)(\s+(.*))?$/
 	  path = $1
 	  unless @path[path]
-	    $stderr.puts "Dropping unknown path #{path} from #{SORT_ORDER_NAME}"
+	    $stderr.puts "Dropping unknown path #{path} from #{name}"
 	    next
 	  end
 	  @sorted << path
@@ -211,12 +214,12 @@ private
 	    @subject[$3] = path
 	    @path[path] = $3
 	  else
-	    item = Item.new path
+	    item = Item.new path, @dir
 	    @subject[item.subject] = item
 	    @path[path] = item
 	  end
 	else
-	  $stderr.puts "Malformed line in #{SORT_ORDER_NAME}: #{line}"
+	  $stderr.puts "Malformed line in #{name}: #{line}"
 	end
       end
     end
@@ -226,30 +229,28 @@ private
   # write_sort_order
   #
   def write_sort_order
-    git = Git.instance.git
-    Dir.chdir(File.join(git.dir.path, @prefix)) do |d|
-      File.open(SORT_ORDER_NAME, "w+") do |f|
-	f.puts "# Backlog sort order"
-	f.puts "# <path>[<space><subject>]"
-	f.puts "#"
-	f.puts "# if <subject> is missing, it will be read from <path>"
-	f.puts "#"
-	@sorted.each do |path|
-	  s = @path[path]
-	  raise "@sorted inconsistent for #{@prefix}/#{path}" if p.nil?
-	  s = s.subject if s.is_a? Item
-	  f.puts "#{path} #{s}"
-	end
+    name = File.join(@dir, SORT_ORDER_NAME)
+    File.open(name, "w+") do |f|
+      f.puts "# Backlog sort order"
+      f.puts "# <path>[<space><subject>]"
+      f.puts "#"
+      f.puts "# if <subject> is missing, it will be read from <path>"
+      f.puts "#"
+      @sorted.each do |path|
+	s = @path[path]
+	raise "@sorted inconsistent for #{@prefix}/#{path}" if p.nil?
+	s = s.subject if s.is_a? Item
+	f.puts "#{path} #{s}"
       end
-      $stderr.puts "Written #{@sorted.size} entries to #{SORT_ORDER_NAME}"
+    end
+    $stderr.puts "Written #{@sorted.size} entries to #{name}"
 
-      # update order in git
-      git = git.git # Ouch!
-      git.add SORT_ORDER_NAME
-      status = git.status[SORT_ORDER_NAME]
-      if status && status.type
-	git.commit ".sort_order changed"
-      end
+    # update order in git
+    git = git.git # Ouch!
+    git.add SORT_ORDER_NAME
+    status = git.status[SORT_ORDER_NAME]
+    if status && status.type
+      git.commit ".sort_order changed"
     end
   end
 
