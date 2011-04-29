@@ -48,7 +48,7 @@ class ItemCache
       end
     end
 
-    raise "@path and @subject inconsistent" unless @path.size == @subject.size
+    raise "@path (#{@path.size} entries) and @subject (#{@subject.size} entries) inconsistent" unless @path.size == @subject.size
     
     # consistency check
     
@@ -178,6 +178,9 @@ private
     # initial sort_order creation
     @path.each_key do |path|
       @sorted << path
+      item = Item.new path
+      @subject[item.subject] = item
+      @path[path] = item
     end
     @sorted.sort!
     $stderr.puts "Created #{@sorted.size} entries for #{SORT_ORDER_NAME}"
@@ -207,6 +210,10 @@ private
 	    $stderr.puts "#{path}: #{$3}"
 	    @subject[$3] = path
 	    @path[path] = $3
+	  else
+	    item = Item.new path
+	    @subject[item.subject] = item
+	    @path[path] = item
 	  end
 	else
 	  $stderr.puts "Malformed line in #{SORT_ORDER_NAME}: #{line}"
