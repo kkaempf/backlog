@@ -27,7 +27,7 @@ Dir: <span id="home"><%= @rc.home %></span>
         <% category.items.each do |iid,subject| %>
           <div class="item" id="<%=cid%>_<%=iid%>">
             <div class="item_link">
-              <%= link_to subject, item_path(iid) %>
+              <%= link_to subject, category_items_path(cid,iid) %>
             </div>
             <%= draggable_element "#{cid}_#{iid}", :revert => true %>
             <a class="item_handle" href="#" onclick="return false"> </a>
