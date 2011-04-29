@@ -18,58 +18,35 @@ Dir: <span id="home"><%= @rc.home %></span>
   <% end %>
 <% end %>
 
-<div class="grid_4">
-  <div class="itemlist" id="epics">
-  <h2>Epics</h2>
-  <div class="itemlist" id="epics_list">
-  <% @items.each do |item| %>
-    <div class="item" id="epic_<%= item.id %>">
-      <div class="item_link">
-      <%= link_to item.subject, item_path(item) %>
+  <% @categories.each do |category|
+       cid = category.id %>
+  <div class="grid_3">
+    <div class="itemlist" id="<%=cid%>">
+      <h2><%=category.name%></h2>
+      <div class="itemlist" id="<%=cid%>_list">
+        <% category.items.each do |iid,subject| %>
+          <div class="item" id="<%=cid%>_<%=iid%>">
+            <div class="item_link">
+              <%= link_to subject, item_path(iid) %>
+            </div>
+            <%= draggable_element "#{cid}_#{iid}", :revert => true %>
+            <a class="item_handle" href="#" onclick="return false"> </a>
+          </div>
+        <% end %>
       </div>
-      <%= draggable_element "epic_#{item.id}", :revert => true %>
-      <a class="item_handle" href="#" onclick="return false"> </a>
-    </div>
-  <% end %>
-  </div>
-  <%= sortable_element "epics_list", :url => { :controller =>
+      <%= sortable_element "#{cid}_list", :url => { :controller =>
 "backlog", :action => "sort" }, :tag => "div", :elements => "$$('.item')",
 :handles => "$$('.item_handle')",
 :constraint => :vertical %>
-  </div>
-</div>
-
-<div class="grid_4">
-  <div class="itemlist" id="prioritized">
-  <h2>Prioritized</h2>
-  <% @items.each do |item| %>
-    <div class="item" id="prio_<%= item.id %>">
-      <%= link_to item.subject, item_path(item) %>
-      <%= draggable_element "prio_#{item.id}", :revert => true %>
     </div>
-  <% end %>
   </div>
-  <%= sortable_element "prioritized", :url => { :controller => "backlog", :action => "prioritize" } %>
-</div>
-
-<div class="grid_4">
-  <div class="itemlist" id="in_progress">
-  <h2>In progress</h2>
-  <% @items.each do |item| %>
-    <div class="item" id="prog_<%= item.id %>">
-      <%= link_to item.subject, item_path(item) %>
-      <%= draggable_element "prog_#{item.id}", :revert => true %>
-    </div>
   <% end %>
-  </div>
-  <%= drop_receiving_element "in_progress", :url => { :controller => "backlog", :action => "progress" } %>
-</div>
 
 <div class="clear"></div>
 <div class="grid_12" id="footer">
   <div class="grid_1">
     <div class="button_new">
-    <%= link_to "new", new_item_url %>
+      <%= link_to "new", new_item_url %>
     </div>
   </div>
   <div class="grid_10"></div>

@@ -10,22 +10,22 @@ BACKLOG_TEMPLATE_PATH = ".template"
 class BacklogTemplate
 
   def initialize
-    @path = Backlog::Git.instance.path_for(BACKLOG_TEMPLATE_PATH)
+    git = Backlog::Git.instance.git
+    @path = File.join(git.dir.path,BACKLOG_TEMPLATE_PATH)
     unless File.readable?(@path)
       File.open(@path, "w+") do |f|
 	f.write <<-TEMPLATE
 # backlog item template
-# subject, uuid, and description are built-in
+# path, subject, and description are built-in
 # list here additional headers
 #
-# The "- " prefi is required to preserve ordering !
+# The "- " prefix is required to preserve ordering !
 #
 - persona: 10
 - value: 5
 - usecase: 50x10
 	TEMPLATE
       end
-      git = Backlog::Git.instance.git
       git.add BACKLOG_TEMPLATE_PATH
       git.commit("Created default .template")
     end

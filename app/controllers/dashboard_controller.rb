@@ -1,5 +1,6 @@
 require 'lib/git'
 require 'lib/backlog_rc'
+require 'lib/category'
 
 class DashboardController < ApplicationController
   
@@ -16,7 +17,7 @@ class DashboardController < ApplicationController
   end
 
   def index
-    @items = Item.find :all
+    @categories = Category.all
   end
 
 end

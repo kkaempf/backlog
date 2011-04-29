@@ -26,30 +26,24 @@ public
   end
   
   def create
-    item = Item.new
-    update_item item, params
-    unless item.valid?
-      @@item_cache.remove item
-    end
-    return
+    item = Item.new params[:subject]
+    update_item(item, params) and return
   end
 
   def update
-    update_item Item.find(params["id"]), params
-    return
+    update_item(Item.find(params["id"]), params) and return
   end
   
   def show
     begin
       id = params["id"]
-      uuid = SimpleUUID::UUID.new(id).to_guid
-      @item = Item.find :id => uuid
+      @item = Item.find :id => id
       raise unless @item
     rescue
-      if uuid.nil?
+      if id.nil?
 	flash[:error] = "Invalid item >%s<" % id
       elsif @item.nil?
-	flash[:error] = "Item #{uuid} not found"
+	flash[:error] = "Item #{id} not found"
       else
 	flash[:error] = "Internal error"
       end
@@ -62,15 +56,14 @@ public
   def destroy
     begin
       id = params["id"]
-      uuid = SimpleUUID::UUID.new(id).to_guid
-      result = Item.remove uuid
+      result = Item.remove id
     rescue
-      if uuid.nil?
+      if id.nil?
 	flash[:error] = "Invalid item >%s<" % id
       elsif result.nil?
-	flash[:error] = "No such item: #{uuid}"
+	flash[:error] = "No such item: #{id}"
       elsif result
-	flash[:error] = "Item #{uuid} removed"
+	flash[:error] = "Item #{id} removed"
       else
 	flash[:error] = "Internal error"
       end

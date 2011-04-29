@@ -1,18 +1,46 @@
-== About backlog
+= About backlog
 
 Backlog is a backlog management system. It provides web-based and
 text-based operation.
+
+== Categories
+
+Items are sorted in categories.
+
+Every new item starts as an Epic. This is basically an uncategorized
+entry which needs review to be advanced to another category.
+
+* Epic
+* Story (doable within a sprint)
+* InProgress (currently being worked on)
+* Done (finished stuff, waits here until release)
+* Released (shipped to customer)
+
+Internally, categories are sub-directories below the main dir. 
+
+
+== Sorting
+
+The files below a category define the items. There's one file per item.
+
+All items within each category are ordered. The order is defined in
+the <category>/.order file.
+
+The .order file is text-based and lists one file (without <category>
+prefix) per line. Files not appearing in .order will be added
+automatically.
+
+The backlog system will also add the item subject to the .order file.
+This improves readability and also helps with internal caching.
+
+
+== Implementation
 
 The basis is 'git' and the architecture follows gits style of
 'plumbing' and 'porcellain'. Here git is the plumbing and the Rails
 application is the porcellain.
 
-== Types of entries
-
-* Theme / Strategy
-* Epic
-* Feature
-* Story (doable within a sprint)
+Each category lives in its own sub-directory and has a separate order
 
 == Kanban stages
 

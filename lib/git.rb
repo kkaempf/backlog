@@ -39,10 +39,6 @@ module Backlog
       end
     end
 
-    def path_for file
-      File.join(Git.instance.git.dir.path, file)
-    end
-
   end # class
   
 end # module
