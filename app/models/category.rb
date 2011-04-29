@@ -1,10 +1,15 @@
 #
 # Category - backlog item category
 #
+
 require 'lib/git'
 require 'lib/item_cache'
+require 'active_model'
 
 class Category
+  extend ActiveModel::Naming
+  include ActiveModel::Conversion
+
   FILENAME = ".categories"
   
   def Category.all
@@ -28,18 +33,40 @@ class Category
     result
   end
 
-  attr_reader :dir, :name, :items
+  def Category.find id
+    Category.new id, ""
+  end
+
+  attr_reader :dir, :name
 
   def initialize dir, name
+    raise "Invalid category dir #{dir}" unless dir =~ /(\w|[-_])+/
     $stderr.puts "Category.new #{dir}:#{name}"
     @dir = dir
     Dir.mkdir(dir) unless File.directory?(dir)
     @name = name
-    @items = ItemCache.new dir
   end
   
+  # ActiveModel helper
+  def persisted?
+    true
+  end
+
+  def to_s
+    @dir
+  end
+
   def id
     @dir
+  end
+  
+  def items
+    @items ||= ItemCache.new(@dir)
+  end
+
+  def delete id
+    $stderr.puts "Category.delete #{id}"
+    # helper for actionpack (3.0.7) lib/action_view/helpers/form_helper.rb:668:in hidden_field'
   end
   
   def Category.create

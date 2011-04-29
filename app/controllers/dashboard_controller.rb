@@ -1,6 +1,5 @@
 require 'lib/git'
 require 'lib/backlog_rc'
-require 'lib/category'
 
 class DashboardController < ApplicationController
   

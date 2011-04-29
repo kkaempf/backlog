@@ -1,8 +1,12 @@
 <h1>New backlog entry</h1>
 
-<%= form_for(:item, :url => items_url) do |f| %>
+<% url = category_items_url(@category)
+   $stderr.puts "Url #{url}" %>
+
+<%= form_for( :item, :url =>url ) do |f| %>
   <%= f.error_messages %>
 
+  <%= hidden_field 'category', 'category', :value => @category.id %>
   <p>
     <%= f.label :subject %><br />
     <%= f.text_field :subject %>

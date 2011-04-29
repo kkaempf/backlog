@@ -6,7 +6,6 @@
 require 'parsedate'
 require 'active_model'
 require 'lib/git'
-require 'lib/item_cache'
 
 class Item
   include ActiveModel::Validations
@@ -58,36 +57,6 @@ private
     end
   end
 public
-  
-############################################################################
-# Class functions
-
-  #
-  # find
-  #
-
-  def Item.find what
-    case what
-    when String
-      ItemCache.subject(subject) || Item.new(subject)
-    when Hash
-      id = what[:id]
-      if id
-	ItemCache.path id
-      else
-	nil
-      end
-    when :all
-      # return all items in sorted order
-      items = []
-      ItemCache.sorted.each do |id|
-	items << ItemCache.path(id)
-      end
-      items
-    else
-      nil
-    end
-  end
 
 ############################################################################
 # Object functions
@@ -117,7 +86,6 @@ public
       self.subject = subject_or_path
       @header.push "Subject: #{@subject}"
     end
-    ItemCache.add(self) 
   end
 
   # helper for ActiveModel, give the model an 'id'
@@ -130,8 +98,6 @@ public
   end
 
   def subject= subject
-#    $stderr.puts "#{item}.subject = #{subject}"
-    ItemCache.change_subject self, subject
     @subject = subject
   end
 

@@ -9,7 +9,9 @@ Backlog::Application.routes.draw do
   post "backlog/prioritize"
   post "backlog/progress"
 
-  resources :items
+  resources :categories do
+    resources :items
+  end
   delete "items/destroy" # JavaScript drop_receiving_element
 
   # The priority is based upon order of creation:

@@ -20,11 +20,16 @@ private
   end
 public
 
+  # gets :category_id
   def new
     require 'lib/backlog_template'
     @template = BacklogTemplate.new
+    @category = Category.find params[:category_id]
   end
   
+  #
+  #   Parameters: {"commit"=>"Create", "category"=>{"category"=>"epic"}, "authenticity_token"=>"E61l1PqVC5RypZWTLUz/hP2JNvlE0xAi3qiKPA7olR4=", "utf8"=>"✓", "category_id"=>"epic", "item"=>{"subject"=>"a", "persona"=>"", "usecase"=>"", "value"=>"", "description"=>"b"}}
+  #
   def create
     item = Item.new params[:subject]
     update_item(item, params) and return
