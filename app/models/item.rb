@@ -13,7 +13,7 @@ class Item
   extend ActiveModel::Naming
   include ActiveModel::Conversion
 
-  attr_reader :created_by, :created_on, :path, :prefix, :subject, :description
+  attr_reader :created_by, :created_on, :path
 
   validates_each :subject do |record, attr, value|
     record.errors.add attr, "missing" unless record.subject && record.subject.size > 0
@@ -25,10 +25,11 @@ private
   #
   # Read item from path
   #
-  def read path
-    raise "File #{path} unreadable" unless File.readable?(path)
-    $stderr.puts "Item.read(#{path})"
-    File.open(path) do |f|
+  def read
+    raise "Item.read without path" unless @path
+    raise "File #{@path} unreadable" unless File.readable?(@path)
+    $stderr.puts "Item.read(#{@path})"
+    File.open(@path) do |f|
       lnum = 0
       while line = f.gets
 	case line.chomp
@@ -42,7 +43,7 @@ private
 	  key = $2.capitalize
 #	  $stderr.puts "Key '#{key}':#{$3}"
 	  case key
-	  when "Subject": self.subject = $3
+	  when "Subject": @subject = $3
 	  else
 	    @header << $&
 	    #	  $stderr.puts "<#{$2}>[#{$3}]"
@@ -63,11 +64,9 @@ public
 # Object functions
 
   #
-  # Create Item
-  # Either by subject (path_prefix = nil)
-  # or by path (path_prefix != nil)
+  # Create Item in Category
   # 
-  def initialize subject_or_path, path_prefix = nil
+  def initialize category
     #
     # array of header lines
     @header = []
@@ -75,11 +74,54 @@ public
     # hash of header keys => [ index into @header, start pos of value ]
     @headerpos = {}
     
-    if path_prefix
-      #  read item properties
-      @prefix = path_prefix
-      read File.join(@prefix, subject_or_path)
-    else
+    @category = category
+
+  end
+
+  def <=> item
+    self.to_s <=> item.to_s
+  end
+
+  # helper for ActiveModel, give the model an 'id'
+  def id
+    raise "Item.id not set" unless @id
+    $stderr.puts "Item.id >#{@id}<"
+    @id
+  end
+
+  def to_s
+    @subject || @id
+  end
+
+  def path= path
+    @path = path
+    @id = path.tr(" /", "_-")
+  end
+
+  def path
+    unless @path
+      @path = File.join(@category.dir, @id)
+    end
+    @path
+  end
+
+  def subject= subject
+    @subject = subject
+    unless @id
+      @id = subject.tr(" /", "_-")
+    end
+  end
+
+  def subject
+    unless @subject
+      read if @header.empty?
+    end
+    @subject
+  end
+
+  def save
+    return false unless self.valid?
+    if @header.empty?
       @created_by = ENV['USER']
       @header.push "From: #{@created_by}"
       @created_on = Time.now
@@ -87,26 +129,7 @@ public
       self.subject = subject_or_path
       @header.push "Subject: #{@subject}"
     end
-  end
-
-  # helper for ActiveModel, give the model an 'id'
-  def id
-    @path.to_s
-  end
-
-  def to_s
-    @subject || self.id
-  end
-
-  def subject= subject
-    @subject = subject
-  end
-
-  def save prefix=nil
-    return false unless self.valid?
-    @prefix = prefix if prefix
-    raise "No prefix to save item to" unless @prefix
-    File.open(File.join(@prefix,@path), "w") do |f|
+    File.open(@path, "w") do |f|
       f.puts "From #{@created_by} #{@created_on.asctime}"
       @header.each do |l|
 	f.puts l
@@ -145,6 +168,7 @@ public
       value = args.shift
       setter = true
     else
+      read if @header.empty?
       key = name
     end
     # known header ?

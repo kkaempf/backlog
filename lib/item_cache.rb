@@ -13,42 +13,36 @@ class ItemCache
   attr_reader :sorted
 
   #
-  # Initialize ItemCache for items below path (== category)
+  # Initialize ItemCache for items belonging to category
   #
-  def initialize prefix
-    @prefix = prefix
+  def initialize category
+    @category = category
+    @prefix = category.dir
     @sorted = []
-    @path = {}     # path -> nil|""|item|subject
-    @subject = {}  # subject -> item|path
+    @path = {}     # path -> item
+    @subject = {}  # subject -> item
 
-    @dir = File.join(Backlog::Git.instance.git.dir.path, prefix)
+    @dir = File.join(Backlog::Git.instance.git.dir.path, @prefix)
     raise "No such category dir" unless File.directory?(@dir)
-    $stderr.puts "ItemCache.new(#{prefix}) -> #{@dir}"
+    $stderr.puts "ItemCache.new(#{@prefix}) -> #{@dir}"
 
     #
     # The files define the items of the category. The .order file just adds ordering information.
     #
     files = Backlog::Git.instance.git.ls_files @prefix
-    plen = prefix.length
-    files.each_key do |file|
-      next if file[0,1] == "."
-      file = file[plen+1..-1] # remove prefix
+    plen = @prefix.length
+    files.each_key do |path|
+      next if path[0,1] == "."
+      file = path[plen+1..-1] # remove prefix
       next if file[0,1] == "."
       $stderr.puts "Filling cache with '#{file}'"
-      @path[file] = ""
+      item = Item.new category
+      item.path = path
+      @path[path] = item
     end
 
+    # get ordering information
     read_sort_order
-    
-    # fill subject if needed
-    @path.each do |p,s|
-      $stderr.puts "@path[#{p}] ->#{s}<"
-      if s.empty?
-	item = Item.new p, @dir
-	@path[p] = item
-	@subject[item.subject] = item
-      end
-    end
 
     raise "@path (#{@path.size} entries) and @subject (#{@subject.size} entries) inconsistent" unless @path.size == @subject.size
     
@@ -57,15 +51,15 @@ class ItemCache
     sorted_changed = false
     
     # Any removed files in @sorted ?
-    @sorted.delete_if do |p|
-      sorted_changed = true if @path[p].nil?
+    @sorted.delete_if do |item|
+      sorted_changed = true if @path[item.path].nil?
     end
 
     # Any new files not in @sorted ?
     if @sorted.size < @path.size
-      @path.each_key do |p|
-	unless @sorted.include? p
-	  @sorted << p
+      @path.each do |path,item|
+	unless @sorted.include? item
+	  @sorted << item
 	  sorted_changed = true
 	end
       end
@@ -73,23 +67,22 @@ class ItemCache
 
     write_sort_order if sorted_changed
 
-    $stderr.puts "Cache filled for #{prefix}"
+    $stderr.puts "Cache filled for #{@prefix}"
     $stderr.puts "#{@path.size} pathes"
     $stderr.puts "#{@subject.size} subjects"
     $stderr.puts "#{@sorted.size} sorted"
   end
 
+  def items
+    @sorted
+  end
+
   #
-  # Iterate items as path,subject
+  # Iterate items in sorted order
   #
   def each
-    @sorted.each do |path|
-      p = @path[path]
-      if p.is_a? Item
-	yield path, p.subject
-      else
-	yield path, p
-      end
+    @sorted.each do |item|
+      yield item
     end
   end
 
@@ -106,15 +99,10 @@ class ItemCache
   end
 
   #
-  # add Item or File
+  # add Item
   #
-  def add item_or_path
-    $stderr.puts "Add #{item_or_path}"
-    if item_or_path.is_a? Item
-      item = item_or_path
-    else
-      item = Item.new item.to_s, @dir
-    end
+  def add item
+    $stderr.puts "Add #{item}"
     s = @subject[item.subject]
     raise "Subject '#{item.subject}' already exists as #{s}" if s
     @subject[item.subject] = item 
@@ -124,20 +112,14 @@ class ItemCache
   end
 
   #
-  # remove (path or item)
+  # remove Item
   #
-  def remove item_or_path
-    $stderr.puts "remove #{item_or_path}"
-    if item_or_path.is_a? Item
-      path = item_or_path.path
-      @subject.delete item.subject
-    else
-      path = item_or_path
-      @subject.delete path
-    end
-
-    @sorted.delete path
-    @path.delete path
+  def remove item
+    $stderr.puts "remove #{item}"
+    @subject.delete item.subject
+    @path.delete item.path
+    @sorted.delete item
+    item.delete
     write_sort_order
   end
 
@@ -149,6 +131,7 @@ class ItemCache
     return unless @path[item.path]
     raise "Duplicate Subject '#{subject}'" if @subject[subject]
     @subject.delete item.subject if item.subject
+    item.subject = subject
     @subject[subject] = item
   end
 
@@ -165,7 +148,7 @@ class ItemCache
     # import new sort order
     @sorted.clear
     list.each do |id|
-      @sorted << id
+      @sorted << path[id]
     end
     write_sort_order
   end
@@ -179,9 +162,10 @@ private
     # .sort_order not readable
     # initial sort_order creation
     @path.each_key do |path|
-      @sorted << path
-      item = Item.new path, @dir
-      $stderr.puts "#{path} -> #{item.subjectg}"
+      item = Item.new @category
+      item.path = path
+      @sorted << item
+      $stderr.puts "#{path} -> #{item.subject}"
       @subject[item.subject] = item
     end
     @sorted.sort!
@@ -189,7 +173,7 @@ private
   end
 
   #
-  # read_sort_order from @prefix
+  # read_sort_order from @dir
   #
   def read_sort_order
     name = File.join(@dir, SORT_ORDER_NAME)
@@ -203,21 +187,18 @@ private
 	next if line.empty?
 	if line =~ /^(\S+)(\s+(.*))?$/
 	  path = $1
-	  unless @path[path]
+	  item = @path[path]
+	  unless item
 	    $stderr.puts "Dropping unknown path #{path} from #{name}"
 	    next
 	  end
-	  @sorted << path
+	  @sorted << item
 	  # capture subject if it exists
 	  if $3
 	    $stderr.puts "#{path}: #{$3}"
-	    @subject[$3] = path
-	    @path[path] = $3
-	  else
-	    item = Item.new path, @dir
-	    @subject[item.subject] = item
-	    @path[path] = item
+	    item.subject = $3
 	  end
+	  @subject[item.subject] = item
 	else
 	  $stderr.puts "Malformed line in #{name}: #{line}"
 	end
@@ -236,11 +217,8 @@ private
       f.puts "#"
       f.puts "# if <subject> is missing, it will be read from <path>"
       f.puts "#"
-      @sorted.each do |path|
-	s = @path[path]
-	raise "@sorted inconsistent for #{@prefix}/#{path}" if p.nil?
-	s = s.subject if s.is_a? Item
-	f.puts "#{path} #{s}"
+      @sorted.each do |item|
+	f.puts "#{item.path} #{item.subject}"
       end
     end
     $stderr.puts "Written #{@sorted.size} entries to #{name}"

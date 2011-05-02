@@ -11,7 +11,8 @@ require File.expand_path('../../config/environment',  __FILE__)
 puts "Backlog"
 
 if ARGV.empty?
-  item = Item.new $stdin
+  category = Category.find "epic"
+  item = Item.new category, $stdin
   file = item.save
   if file
     puts "Item saved as '#{file}'" 

@@ -45,6 +45,7 @@ class Category
     @dir = dir
     Dir.mkdir(dir) unless File.directory?(dir)
     @name = name
+    @cache = ItemCache.new self
   end
   
   # ActiveModel helper
@@ -61,7 +62,7 @@ class Category
   end
   
   def items
-    @items ||= ItemCache.new(@dir)
+    @cache.items
   end
 
   def delete id
