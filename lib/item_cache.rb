@@ -17,27 +17,29 @@ class ItemCache
   #
   def initialize category
     @category = category
-    @prefix = category.dir
+    @dir = category.dir
     @sorted = []
     @path = {}     # path -> item
     @subject = {}  # subject -> item
 
-    @dir = File.join(Backlog::Git.instance.git.dir.path, @prefix)
-    raise "No such category dir" unless File.directory?(@dir)
-    $stderr.puts "ItemCache.new(#{@prefix}) -> #{@dir}"
+    raise "No such category dir #{@dir}" unless File.directory?(@dir)
+    $stderr.puts "ItemCache.new(#{@category.name}) -> #{@dir}"
 
     #
     # The files define the items of the category. The .order file just adds ordering information.
     #
-    files = Backlog::Git.instance.git.ls_files @prefix
-    plen = @prefix.length
+    files = Backlog::Git.instance.git.ls_files
+    plen = @category.prefix.length
     files.each_key do |path|
+      $stderr.puts "ItemCache path >#{path}< prefix [#{@category.prefix}:#{plen}>]"
       next if path[0,1] == "."
-      file = path[plen+1..-1] # remove prefix
+      next unless @category.prefix == path[0,plen]
+      file = path[plen+1..-1] # remove dir prefix
+      $stderr.puts "ItemCache file >#{file}<"
       next if file[0,1] == "."
       $stderr.puts "Filling cache with '#{file}'"
       item = Item.new category
-      item.path = path
+      item.path = File.join(category.dir,file)
       @path[path] = item
     end
 
@@ -67,7 +69,7 @@ class ItemCache
 
     write_sort_order if sorted_changed
 
-    $stderr.puts "Cache filled for #{@prefix}"
+    $stderr.puts "Cache filled for #{@category}"
     $stderr.puts "#{@path.size} pathes"
     $stderr.puts "#{@subject.size} subjects"
     $stderr.puts "#{@sorted.size} sorted"
@@ -158,7 +160,7 @@ private
   # <path>[<space><subject>]
 
   def create_sort_order
-    $stderr.puts "Creating #{@prefix}/#{SORT_ORDER_NAME}"
+    $stderr.puts "Creating #{@dir}/#{SORT_ORDER_NAME}"
     # .sort_order not readable
     # initial sort_order creation
     @path.each_key do |path|
@@ -169,7 +171,7 @@ private
       @subject[item.subject] = item
     end
     @sorted.sort!
-    $stderr.puts "Created #{@sorted.size} entries for #{@prefix}/#{SORT_ORDER_NAME}"
+    $stderr.puts "Created #{@sorted.size} entries for #{@dir}/#{SORT_ORDER_NAME}"
   end
 
   #

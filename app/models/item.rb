@@ -99,17 +99,12 @@ public
   end
 
   def path
-    unless @path
-      @path = File.join(@category.dir, @id)
-    end
-    @path
+    @path ||= File.join(@category.dir, @id)
   end
 
   def subject= subject
     @subject = subject
-    unless @id
-      @id = subject.tr(" /", "_-")
-    end
+    @id ||= subject.tr(" /", "_-")
   end
 
   def subject
@@ -120,16 +115,20 @@ public
   end
 
   def save
+    $stderr.puts "Item.save"
     return false unless self.valid?
-    if @header.empty?
+    $stderr.puts "Item is valid"
+    unless @created_by # new item
       @created_by = ENV['USER']
       @header.push "From: #{@created_by}"
       @created_on = Time.now
       @header.push "Date: #{@created_on}"
-      self.subject = subject_or_path
       @header.push "Subject: #{@subject}"
     end
-    File.open(@path, "w") do |f|
+    $stderr.puts "Item @header #{@header.inspect}"
+    # use self.path to force creation of @path
+    File.open(self.path, "w") do |f|
+      $stderr.puts "Item.save to #{@path}"
       f.puts "From #{@created_by} #{@created_on.asctime}"
       @header.each do |l|
 	f.puts l
@@ -138,7 +137,7 @@ public
       f.write @description
     end
     git = Backlog::Git.instance.git
-    git.add file
+    git.add @path
     status = git.status[@subject]
     return nil unless status
     commit_msg = nil
@@ -168,7 +167,7 @@ public
       value = args.shift
       setter = true
     else
-      read if @header.empty?
+      read if @path && @header.empty?
       key = name
     end
     # known header ?
